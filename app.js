@@ -307,14 +307,16 @@ function renderBalance() {
   const creditors = names.filter(n => net[n] >  0.01).map(n => ({ name: n, amt:  net[n] }));
   const transactions = [];
 
-  for (const debtor of debtors) {
-    let remaining = debtor.amt;
-    for (const creditor of creditors) {
-      if (creditor.amt < 0.01) continue;
-      const totalCredit = creditors.reduce((s, c) => s + c.amt, 0);
-      const pay = remaining * (creditor.amt / totalCredit);
-      if (pay > 0.01) {
-        transactions.push({ from: debtor.name, to: creditor.name, amt: pay });
+ const names2 = Object.keys(MEMBERS);
+  for (let i = 0; i < names2.length; i++) {
+    for (let j = i + 1; j < names2.length; j++) {
+      const a = names2[i];
+      const b = names2[j];
+      const diff = (spent[b] - spent[a]) / names2.length;
+      if (diff > 0.01) {
+        transactions.push({ from: a, to: b, amt: diff });
+      } else if (diff < -0.01) {
+        transactions.push({ from: b, to: a, amt: -diff });
       }
     }
   }
