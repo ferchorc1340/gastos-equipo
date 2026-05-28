@@ -318,7 +318,26 @@ function renderBalance() {
       }
     }
   }
+const settle = document.getElementById('settle-section');
+  if (!transactions.length) {
+    settle.innerHTML = total > 0
+      ? `<div class="empty-state" style="padding:20px"><i class="ti ti-checks" style="font-size:32px;color:#4CAF50;opacity:1"></i><p>¡Todo está al día!</p></div>`
+      : `<div class="empty-state" style="padding:20px"><i class="ti ti-receipt-off"></i><p>Registra compras para ver el balance</p></div>`;
+    return;
+  }
 
+  settle.innerHTML = `<p class="section-label" style="margin-bottom:10px">Cómo liquidar</p>` +
+    transactions.map(t => {
+      const from = MEMBERS[t.from] || {};
+      const to = MEMBERS[t.to] || {};
+      return `<div class="txn-card">
+        <div class="p-avatar" style="background:${from.bg};color:${from.color};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${from.init}</div>
+        <div class="txn-body"><strong>${t.from}</strong> le paga a <strong>${t.to}</strong></div>
+        <div class="p-avatar" style="background:${to.bg};color:${to.color};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${to.init}</div>
+        <div class="txn-amount">$${t.amt.toFixed(2)}</div>
+      </div>`;
+    }).join('');
+}
 // ── Navigation ────────────────────────────
 
 function weekShift(dir) {
