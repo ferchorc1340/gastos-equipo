@@ -302,40 +302,22 @@ function renderBalance() {
   }).join('');
 
   // Settlement
-  const debtors = names.filter(n => net[n] < -0.01).map(n => ({ name: n, amt: -net[n] }));
-  const creditors = names.filter(n => net[n] > 0.01).map(n => ({ name: n, amt: net[n] }));
+  // Settlement — proporcional a lo que cada acreedor aportó
+  const debtors   = names.filter(n => net[n] < -0.01).map(n => ({ name: n, amt: -net[n] }));
+  const creditors = names.filter(n => net[n] >  0.01).map(n => ({ name: n, amt:  net[n] }));
   const transactions = [];
-  const d = debtors.map(x => ({ ...x }));
-  const c = creditors.map(x => ({ ...x }));
-  let di = 0, ci = 0;
-  while (di < d.length && ci < c.length) {
-    const pay = Math.min(d[di].amt, c[ci].amt);
-    if (pay > 0.01) transactions.push({ from: d[di].name, to: c[ci].name, amt: pay });
-    d[di].amt -= pay; c[ci].amt -= pay;
-    if (d[di].amt < 0.01) di++;
-    if (c[ci].amt < 0.01) ci++;
-  }
 
-  const settle = document.getElementById('settle-section');
-  if (!transactions.length) {
-    settle.innerHTML = total > 0
-      ? `<div class="empty-state" style="padding:20px"><i class="ti ti-checks" style="font-size:32px;color:#4CAF50;opacity:1"></i><p>¡Todo está al día!</p></div>`
-      : `<div class="empty-state" style="padding:20px"><i class="ti ti-receipt-off"></i><p>Registra compras para ver el balance</p></div>`;
-    return;
+  for (const debtor of debtors) {
+    const totalCredit = creditors.reduce((s, c) => s + c.amt, 0);
+    for (const creditor of creditors) {
+      if (creditor.amt < 0.01) continue;
+      // cuánto le toca pagar a este deudor a este acreedor, proporcional
+      const pay = debtor.amt * (creditor.amt / totalCredit);
+      if (pay > 0.01) {
+        transactions.push({ from: debtor.name, to: creditor.name, amt: pay });
+      }
+    }
   }
-
-  settle.innerHTML = `<p class="section-label" style="margin-bottom:10px">Cómo liquidar</p>` +
-    transactions.map(t => {
-      const from = MEMBERS[t.from] || {};
-      const to = MEMBERS[t.to] || {};
-      return `<div class="txn-card">
-        <div class="p-avatar" style="background:${from.bg};color:${from.color};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${from.init}</div>
-        <div class="txn-body"><strong>${t.from}</strong> le paga a <strong>${t.to}</strong></div>
-        <div class="p-avatar" style="background:${to.bg};color:${to.color};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${to.init}</div>
-        <div class="txn-amount">$${t.amt.toFixed(2)}</div>
-      </div>`;
-    }).join('');
-}
 
 // ── Navigation ────────────────────────────
 
