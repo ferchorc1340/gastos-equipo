@@ -308,11 +308,11 @@ function renderBalance() {
   const transactions = [];
 
   for (const debtor of debtors) {
-    const totalCredit = creditors.reduce((s, c) => s + c.amt, 0);
+    let remaining = debtor.amt;
     for (const creditor of creditors) {
       if (creditor.amt < 0.01) continue;
-      // cuánto le toca pagar a este deudor a este acreedor, proporcional
-      const pay = debtor.amt * (creditor.amt / totalCredit);
+      const totalCredit = creditors.reduce((s, c) => s + c.amt, 0);
+      const pay = remaining * (creditor.amt / totalCredit);
       if (pay > 0.01) {
         transactions.push({ from: debtor.name, to: creditor.name, amt: pay });
       }
